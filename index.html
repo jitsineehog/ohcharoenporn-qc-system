@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบบันทึก QC หน้างาน - บริษัท โอ้วเจริญพร จำกัด</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #FDF8F2;
+      color: #4A2E1B;
+    }
+    .caramel-gradient {
+      background: linear-gradient(135deg, #8B4513 0%, #B86B28 100%);
+    }
+    .soft-card {
+      background: #FFFFFF;
+      border: 1px solid #F0E2D0;
+      box-shadow: 0 4px 15px rgba(139, 69, 19, 0.06);
+    }
+    .tab-active {
+      background-color: #8B4513;
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+      transform: translateY(-2px);
+    }
+    .tab-inactive {
+      background-color: #FFFFFF;
+      color: #7A5236;
+      border: 1px solid #F0E2D0;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-10">
+
+  <!-- Header -->
+  <header class="caramel-gradient text-white p-5 rounded-b-3xl shadow-lg">
+    <div class="max-w-xl mx-auto">
+      <div class="flex justify-between items-center">
+        <div>
+          <span class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full">ฝ่ายควบคุมคุณภาพ (QC)</span>
+          <h1 class="text-lg font-bold mt-1">🍯 บริษัท โอ้วเจริญพร จำกัด</h1>
+          <p class="text-xs text-amber-100">ระบบบันทึกข้อมูลตรวจสอบคุณภาพหน้างาน</p>
+        </div>
+        <div class="text-right">
+          <div id="header-date" class="text-xs font-semibold"></div>
+          <div id="header-time" class="text-[11px] text-amber-200"></div>
+          <div id="sync-status" class="text-[10px] text-emerald-200 mt-1">🟢 พร้อมส่งข้อมูลเข้า Google Sheet</div>
+        </div>
+      </div>
+
+      <!-- ช่องเลือกชื่อผู้ตรวจด้านบนสุด -->
+      <div class="mt-3 bg-black/15 p-2.5 rounded-2xl flex items-center justify-between gap-2">
+        <label class="text-xs font-medium text-amber-100 whitespace-nowrap">👤 ผู้ตรวจ:</label>
+        <select id="inspector-name" onchange="saveInspectorName()" class="w-full p-1.5 rounded-xl bg-white text-[#4A2E1B] text-xs font-bold focus:outline-none">
+          <option value="ผึ้ง">จิตรสินี</option>
+          <option value="เนย">ศศิกานต์</option>
+          <option value="ครีม">สมฤดี</option>
+          <option value="อื่นๆ">เจ้าหน้าที่ QC อื่นๆ</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 mt-4 space-y-4">
+
+    <!-- ปุ่มเลือกแบบฟอร์ม 3 ใบตามเอกสารจริง -->
+    <div class="grid grid-cols-3 gap-2">
+      <button onclick="switchForm(1)" id="tab-1" class="tab-active py-2.5 px-1.5 rounded-2xl text-center transition-all">
+        <div class="text-base">🌡️</div>
+        <div class="text-[11px] font-bold mt-0.5 leading-tight">1. อุณหภูมิ<br>& ความหวาน</div>
+      </button>
+      <button onclick="switchForm(2)" id="tab-2" class="tab-inactive py-2.5 px-1.5 rounded-2xl text-center transition-all">
+        <div class="text-base">🍯</div>
+        <div class="text-[11px] font-bold mt-0.5 leading-tight">2. เคี่ยวน้ำตาล<br>(FM-GHP-2002)</div>
+      </button>
+      <button onclick="switchForm(3)" id="tab-3" class="tab-inactive py-2.5 px-1.5 rounded-2xl text-center transition-all">
+        <div class="text-base">📦</div>
+        <div class="text-[11px] font-bold mt-0.5 leading-tight">3. ขั้นสุดท้าย<br>(แผนกบรรจุ)</div>
+      </button>
+    </div>
+
+    <!-- ==================== แบบฟอร์มที่ 1: เช็กอุณหภูมิและความหวาน ==================== -->
+    <div id="form-1" class="soft-card p-5 rounded-3xl space-y-4">
+      <div class="border-b border-amber-100 pb-2.5">
+        <h2 class="font-bold text-base text-[#8B4513]">🌡️ ใบรายงานตรวจเช็กอุณหภูมิ และความหวาน</h2>
+        <p class="text-xs text-gray-500">แผนกเคี่ยวน้ำตาล (เตา 1 / เตา 2)</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">เลือกเตา</label>
+          <select id="f1-stove" class="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50/40 text-sm font-bold">
+            <option value="เตา 1">เตา 1</option>
+            <option value="เตา 2">เตา 2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">กระทะที่ (1 - 10)</label>
+          <select id="f1-pan" class="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50/40 text-sm font-bold">
+            <option value="กระทะที่ 1">กระทะที่ 1</option>
+            <option value="กระทะที่ 2">กระทะที่ 2</option>
+            <option value="กระทะที่ 3">กระทะที่ 3</option>
+            <option value="กระทะที่ 4">กระทะที่ 4</option>
+            <option value="กระทะที่ 5">กระทะที่ 5</option>
+            <option value="กระทะที่ 6">กระทะที่ 6</option>
+            <option value="กระทะที่ 7">กระทะที่ 7</option>
+            <option value="กระทะที่ 8">กระทะที่ 8</option>
+            <option value="กระทะที่ 9">กระทะที่ 9</option>
+            <option value="กระทะที่ 10">กระทะที่ 10</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">อุณหภูมิ (°C)</label>
+          <input type="number" step="0.1" id="f1-temp" placeholder="เช่น 115.5"
+            class="w-full p-3 rounded-xl border border-amber-200 text-base font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">ความหวาน (บริกซ์ / Brix)</label>
+          <input type="number" step="0.1" id="f1-brix" placeholder="เช่น 82.0"
+            class="w-full p-3 rounded-xl border border-amber-200 text-base font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold mb-1">หมายเหตุ (ถ้ามี)</label>
+        <input type="text" id="f1-note" placeholder="ระบุรายละเอียดเพิ่มเติม..." class="w-full p-2.5 rounded-xl border border-amber-200 text-sm" />
+      </div>
+
+      <button onclick="saveRecord(1)" id="btn-save-1" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20 transition">
+        💾 บันทึกอุณหภูมิและความหวาน
+      </button>
+    </div>
+
+    <!-- ==================== แบบฟอร์มที่ 2: ตรวจสอบคุณภาพ - เคี่ยวน้ำตาล ==================== -->
+    <div id="form-2" class="hidden soft-card p-5 rounded-3xl space-y-4">
+      <div class="border-b border-amber-100 pb-2.5 flex justify-between items-start">
+        <div>
+          <h2 class="font-bold text-base text-[#8B4513]">🍯 ตรวจสอบคุณภาพ - เคี่ยวน้ำตาล</h2>
+          <p class="text-xs text-gray-500">แผนกเคี่ยวน้ำตาล (FM-GHP-2002)</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">ช่วงกะทะ</label>
+          <select id="f2-batch" class="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50/40 text-sm font-bold">
+            <option value="0-20">0 - 20</option>
+            <option value="21-40">21 - 40</option>
+            <option value="41-60">41 - 60</option>
+            <option value="61-80">61 - 80</option>
+            <option value="81-100">81 - 100</option>
+            <option value="101-120">101 - 120</option>
+            <option value="121-140">121 - 140</option>
+            <option value="141-160">141 - 160</option>
+            <option value="161-180">161 - 180</option>
+            <option value="181-200">181 - 200</option>
+            <option value="201-220">201 - 220</option>
+            <option value="221-240">221 - 240</option>
+            <option value="241-260">241 - 260</option>
+            <option value="261-280">261 - 280</option>
+            <option value="281-300">281 - 300</option>
+            <option value="301-320">301 - 320</option>
+            <option value="321-340">321 - 340</option>
+            <option value="341-360">341 - 360</option>
+            <option value="361-380">361 - 380</option>
+            <option value="381-400">381 - 400</option>
+            <option value="401-420">401 - 420</option>
+            <option value="421-440">421 - 440</option>
+            <option value="441-460">441 - 460</option>
+            <option value="461-480">461 - 480</option>
+            <option value="481-500">481 - 500</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">ประเภทน้ำตาล</label>
+          <input type="text" id="f2-type" value="น้ำตาลมะพร้าว" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm font-semibold" />
+        </div>
+      </div>
+
+      <!-- รายการตรวจ -->
+      <div class="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-100 space-y-3">
+        <p class="text-xs font-bold text-amber-900">รายการตรวจ (ติ๊กถูก = ผ่าน / เอาออก = ไม่ผ่าน):</p>
+        <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+          <span class="text-sm font-medium">1. การปนเปื้อนแมลง (ไม่พบแมลง)</span>
+          <input type="checkbox" id="f2-chk-insect" checked class="w-5 h-5 accent-emerald-600" />
+        </label>
+        <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+          <span class="text-sm font-medium">2. สิ่งแปลกปลอม (ไม่พบเศษดิน/พลาสติก/เศษไม้/จุดดำ)</span>
+          <input type="checkbox" id="f2-chk-foreign" checked class="w-5 h-5 accent-emerald-600" />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">จำนวนที่พบปัญหา</label>
+          <input type="number" id="f2-issue-count" value="0" min="0" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm text-center font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">สรุปผลการตรวจ</label>
+          <select id="f2-result" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm font-bold bg-white">
+            <option value="ผ่าน">✓ ผ่าน</option>
+            <option value="ไม่ผ่าน">X ไม่ผ่าน</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold mb-1">หมายเหตุ (เช่น เศษดิน, พลาสติก, เศษไม้, จุดดำ)</label>
+        <input type="text" id="f2-note" placeholder="ระบุรายละเอียดหากพบสิ่งแปลกปลอม..." class="w-full p-2.5 rounded-xl border border-amber-200 text-sm" />
+      </div>
+
+      <button onclick="saveRecord(2)" id="btn-save-2" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20 transition">
+        💾 บันทึกผลตรวจเคี่ยวน้ำตาล
+      </button>
+    </div>
+
+    <!-- ==================== แบบฟอร์มที่ 3: ตรวจสอบคุณภาพ ขั้นสุดท้าย (Final Inspection) ==================== -->
+    <div id="form-3" class="hidden soft-card p-5 rounded-3xl space-y-4">
+      <div class="border-b border-amber-100 pb-2.5">
+        <h2 class="font-bold text-base text-[#8B4513]">📦 ตรวจสอบคุณภาพ ขั้นสุดท้าย (Final Inspection)</h2>
+        <p class="text-xs text-gray-500">แผนกบรรจุ (AQL = 1.5)</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-2xl border border-amber-100">
+        <div>
+          <label class="block text-[11px] font-semibold mb-1">จำนวนทั้งหมด (ถุง)</label>
+          <input type="number" id="f3-total-bags" placeholder="เช่น 200" class="w-full p-2 rounded-xl border border-amber-200 text-xs bg-white" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold mb-1">จำนวนทั้งหมด (กล่อง)</label>
+          <input type="number" id="f3-total-boxes" placeholder="เช่น 20" class="w-full p-2 rounded-xl border border-amber-200 text-xs bg-white" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">สุ่มตัวอย่าง</label>
+          <select id="f3-sample" class="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50/40 text-sm font-bold">
+            <option value="1-20">1 - 20</option>
+            <option value="21-40">21 - 40</option>
+            <option value="41-60">41 - 60</option>
+            <option value="61-80">61 - 80</option>
+            <option value="81-100">81 - 100</option>
+            <option value="101-120">101 - 120</option>
+            <option value="121-140">121 - 140</option>
+            <option value="141-160">141 - 160</option>
+            <option value="161-180">161 - 180</option>
+            <option value="181-200">181 - 200</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">Lot No.</label>
+          <input type="text" id="f3-lot" placeholder="ระบุ Lot No." class="w-full p-2.5 rounded-xl border border-amber-200 text-sm font-semibold" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">รายการสินค้า</label>
+          <input type="text" id="f3-product" value="น้ำตาลมะพร้าว" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">ลูกค้า</label>
+          <input type="text" id="f3-customer" value="แมคโคร" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">น้ำหนัก (กก. ต่อถุง)</label>
+          <input type="number" step="0.01" id="f3-weight" placeholder="เช่น 1.00" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm text-center font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">จำนวนถุงต่อกล่อง</label>
+          <input type="number" id="f3-bags-per-box" placeholder="เช่น 10" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm text-center font-bold" />
+        </div>
+      </div>
+
+      <div class="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-100 space-y-2">
+        <p class="text-xs font-bold text-amber-900">รายการตรวจสอบคุณภาพ (ติ๊กถูก = ผ่าน ✓ / เอาออก = ไม่ผ่าน X):</p>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+            <span class="text-xs font-semibold">1. สภาพถุง</span>
+            <input type="checkbox" id="f3-chk-bag" checked class="w-4 h-4 accent-emerald-600" />
+          </label>
+          <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+            <span class="text-xs font-semibold">2. ตัวหนังสือ</span>
+            <input type="checkbox" id="f3-chk-text" checked class="w-4 h-4 accent-emerald-600" />
+          </label>
+          <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+            <span class="text-xs font-semibold">3. การซีล</span>
+            <input type="checkbox" id="f3-chk-seal" checked class="w-4 h-4 accent-emerald-600" />
+          </label>
+          <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-100 cursor-pointer">
+            <span class="text-xs font-semibold">4. สิ่งแปลกปลอม</span>
+            <input type="checkbox" id="f3-chk-foreign" checked class="w-4 h-4 accent-emerald-600" />
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1">ผลการตรวจรวม</label>
+          <select id="f3-result" class="w-full p-2.5 rounded-xl border border-amber-200 text-sm font-bold bg-white">
+            <option value="ผ่าน">✓ ผ่าน</option>
+            <option value="ไม่ผ่าน">X ไม่ผ่าน</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">หมายเหตุ</label>
+          <input type="text" id="f3-note" placeholder="ระบุเพิ่มเติม..." class="w-full p-2.5 rounded-xl border border-amber-200 text-sm" />
+        </div>
+      </div>
+
+      <button onclick="saveRecord(3)" id="btn-save-3" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20 transition">
+        💾 บันทึกผลตรวจขั้นสุดท้าย
+      </button>
+    </div>
+
+    <!-- รายการล่าสุดที่เพิ่งบันทึกในเครื่องวันนี้ พร้อมปุ่มแก้ไข/ลบ -->
+    <div class="soft-card p-4 rounded-3xl space-y-2.5">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xs font-bold text-[#8B4513]">🕒 รายการที่บันทึกวันนี้ (แก้ไข/ลบได้)</h3>
+        <span id="today-count" class="text-[11px] bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">0 รายการ</span>
+      </div>
+      <div id="recent-list" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+        <div class="text-center text-gray-400 py-3">ยังไม่มีรายการบันทึกในวันนี้</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdC91dNUEyQho8TQP7wxJxrwW5CTLBvpAhFZZzd_aTtZwV4NMLDUM1yG-wAss8Q_nYMQ/exec';
+
+    function getLocalTodayStr() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000;
+      return new Date(now.getTime() - offset).toISOString().split('T')[0];
+    }
+
+    const todayStr = getLocalTodayStr();
+    let localTodayLogs = JSON.parse(localStorage.getItem('qc_logs_' + todayStr)) || [];
+
+    function initApp() {
+      const savedInspector = localStorage.getItem('qc_inspector_name');
+      if (savedInspector) {
+        document.getElementById('inspector-name').value = savedInspector;
+      }
+
+      const updateClock = () => {
+        const now = new Date();
+        document.getElementById('header-date').innerText = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+        document.getElementById('header-time').innerText = 'เวลา ' + now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+      };
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      renderRecentLogs();
+    }
+    window.onload = initApp;
+
+    function saveInspectorName() {
+      const name = document.getElementById('inspector-name').value;
+      localStorage.setItem('qc_inspector_name', name);
+    }
+
+    function switchForm(formNum) {
+      [1, 2, 3].forEach(n => {
+        document.getElementById(`form-${n}`).classList.toggle('hidden', n !== formNum);
+        document.getElementById(`tab-${n}`).className = n === formNum
+          ? 'tab-active py-2.5 px-1.5 rounded-2xl text-center transition-all'
+          : 'tab-inactive py-2.5 px-1.5 rounded-2xl text-center transition-all';
+      });
+    }
+
+    async function saveRecord(formNum) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const inspector = document.getElementById('inspector-name').value;
+
+      let pointName = '';
+      let detail = '';
+      let status = 'ผ่าน';
+      let note = '';
+
+      if (formNum === 1) {
+        pointName = 'อุณหภูมิและความหวาน';
+        const stove = document.getElementById('f1-stove').value;
+        const pan = document.getElementById('f1-pan').value;
+        const temp = document.getElementById('f1-temp').value;
+        const brix = document.getElementById('f1-brix').value;
+
+        if (!temp && !brix) return alert('กรุณากรอกอุณหภูมิ หรือค่าความหวาน (บริกซ์) ก่อนบันทึกค่ะ');
+        detail = `${stove} | ${pan} | อุณหภูมิ: ${temp || '-'}°C | บริกซ์: ${brix || '-'}`;
+        status = 'บันทึกแล้ว';
+        note = document.getElementById('f1-note').value;
+
+      } else if (formNum === 2) {
+        pointName = 'เคี่ยวน้ำตาล (FM-GHP-2002)';
+        const batch = document.getElementById('f2-batch').value;
+        const type = document.getElementById('f2-type').value;
+        const insect = document.getElementById('f2-chk-insect').checked ? 'ผ่าน' : 'พบแมลง';
+        const foreign = document.getElementById('f2-chk-foreign').checked ? 'ผ่าน' : 'พบสิ่งแปลกปลอม';
+        const issues = document.getElementById('f2-issue-count').value || '0';
+
+        detail = `กะทะ: ${batch} (${type}) | แมลง: ${insect} | สิ่งแปลกปลอม: ${foreign} | พบปัญหา: ${issues}`;
+        status = document.getElementById('f2-result').value;
+        note = document.getElementById('f2-note').value;
+
+      } else if (formNum === 3) {
+        pointName = 'ขั้นสุดท้าย (แผนกบรรจุ)';
+        const totalBags = document.getElementById('f3-total-bags').value || '-';
+        const totalBoxes = document.getElementById('f3-total-boxes').value || '-';
+        const sample = document.getElementById('f3-sample').value;
+        const lot = document.getElementById('f3-lot').value || '-';
+        const product = document.getElementById('f3-product').value;
+        const customer = document.getElementById('f3-customer').value;
+        const weight = document.getElementById('f3-weight').value || '-';
+        const bagsPerBox = document.getElementById('f3-bags-per-box').value || '-';
+
+        const bagOk = document.getElementById('f3-chk-bag').checked ? '✓' : 'X';
+        const textOk = document.getElementById('f3-chk-text').checked ? '✓' : 'X';
+        const sealOk = document.getElementById('f3-chk-seal').checked ? '✓' : 'X';
+        const foreignOk = document.getElementById('f3-chk-foreign').checked ? '✓' : 'X';
+
+        detail = `สุ่ม: ${sample} | ${product} (${customer}) | Lot: ${lot} | นน.: ${weight}กก. (${bagsPerBox}ถุง/กล่อง) | ยอดรวม: ${totalBags}ถุง/${totalBoxes}กล่อง | ตรวจ[ถุง:${bagOk}, อักษร:${textOk}, ซีล:${sealOk}, แปลกปลอม:${foreignOk}]`;
+        status = document.getElementById('f3-result').value;
+        note = document.getElementById('f3-note').value;
+      }
+
+      const fullNote = note ? `${note} (ผู้ตรวจ: ${inspector})` : `ผู้ตรวจ: ${inspector}`;
+
+      const payload = {
+        id: Date.now(),
+        date: getLocalTodayStr(),
+        time: timeStr,
+        point: formNum,
+        pointName: pointName,
+        detail: detail,
+        status: status,
+        note: fullNote
+      };
+
+      const btn = document.getElementById(`btn-save-${formNum}`);
+      const oldText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ กำลังส่งข้อมูลเข้า Google Sheet...';
+
+      localTodayLogs.unshift(payload);
+      localStorage.setItem('qc_logs_' + todayStr, JSON.stringify(localTodayLogs));
+      renderRecentLogs();
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        document.getElementById('sync-status').innerText = '🟢 ส่งข้อมูลล่าสุดสำเร็จ';
+      } catch (err) {
+        console.error(err);
+        alert('ไม่สามารถส่งขึ้น Google Sheet ได้ กรุณาเช็กอินเทอร์เน็ต');
+      }
+
+      if (formNum === 1) {
+        document.getElementById('f1-temp').value = '';
+        document.getElementById('f1-brix').value = '';
+        document.getElementById('f1-note').value = '';
+      } else if (formNum === 2) {
+        document.getElementById('f2-issue-count').value = '0';
+        document.getElementById('f2-note').value = '';
+      } else if (formNum === 3) {
+        document.getElementById('f3-weight').value = '';
+        document.getElementById('f3-note').value = '';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+      alert(`✅ บันทึก "${pointName}" เรียบร้อยแล้ว!`);
+    }
+
+    function deleteLog(id) {
+      if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+      localTodayLogs = localTodayLogs.filter(item => item.id !== id);
+      localStorage.setItem('qc_logs_' + todayStr, JSON.stringify(localTodayLogs));
+      renderRecentLogs();
+    }
+
+    function editLog(id) {
+      const item = localTodayLogs.find(i => i.id === id);
+      if (!item) return;
+
+      switchForm(item.point);
+      alert(`⚠️ โหลดข้อมูล "${item.pointName}" กลับมาที่ฟอร์มแล้ว สามารถแก้ไขแล้วกดบันทึกส่งใหม่ได้เลยครับ`);
+      
+      // ลบรายการเก่าออกเพื่อไม่ให้ซ้ำซ้อน
+      localTodayLogs = localTodayLogs.filter(i => i.id !== id);
+      localStorage.setItem('qc_logs_' + todayStr, JSON.stringify(localTodayLogs));
+      renderRecentLogs();
+    }
+
+    function renderRecentLogs() {
+      const container = document.getElementById('recent-list');
+      document.getElementById('today-count').innerText = `${localTodayLogs.length} รายการ`;
+
+      if (localTodayLogs.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-400 py-3">ยังไม่มีรายการบันทึกในวันนี้</div>`;
+        return;
+      }
+
+      container.innerHTML = localTodayLogs.map(item => `
+        <div class="p-2.5 rounded-xl bg-amber-50/50 border border-amber-100 space-y-1">
+          <div class="flex justify-between font-bold text-[#8B4513]">
+            <span>${item.pointName}</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-500 font-normal">${item.time} น.</span>
+              <button onclick="editLog(${item.id})" class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-lg hover:bg-amber-700">✏️ แก้ไข</button>
+              <button onclick="deleteLog(${item.id})" class="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-lg hover:bg-red-600">🗑️ ลบ</button>
+            </div>
+          </div>
+          <div class="text-gray-700">${item.detail}</div>
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="text-gray-500">${item.note}</span>
+            <span class="px-2 py-0.5 rounded-full font-bold ${item.status === 'ไม่ผ่าน' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${item.status}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

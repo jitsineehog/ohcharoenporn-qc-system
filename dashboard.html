@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard ผู้บริหาร - บริษัท โอ้วเจริญพร จำกัด</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #FDF8F2;
+      color: #4A2E1B;
+    }
+    .caramel-gradient {
+      background: linear-gradient(135deg, #8B4513 0%, #B86B28 100%);
+    }
+    .soft-card {
+      background: #FFFFFF;
+      border: 1px solid #F0E2D0;
+      box-shadow: 0 4px 15px rgba(139, 69, 19, 0.06);
+    }
+    .clickable-card {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .clickable-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(139, 69, 19, 0.12);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-10">
+
+  <!-- Header ฝั่งหัวหน้า (ลบปุ่มย้อนกลับออกแล้ว) -->
+  <header class="caramel-gradient text-white p-5 rounded-b-3xl shadow-lg">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div>
+        <span class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full">ผู้บริหาร / หัวหน้างาน</span>
+        <h1 class="text-xl font-bold mt-1">📊 แดชบอร์ดตรวจสอบคุณภาพ - โอ้วเจริญพร</h1>
+        <p class="text-xs text-amber-100">ระบบติดตาม สรุปผล และวิเคราะห์ข้อมูล QC จากหน้างาน</p>
+      </div>
+      <div class="text-right">
+        <div id="update-time" class="text-xs text-amber-200 font-semibold">กำลังโหลดข้อมูล...</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- แถบสรุปยอด (กดคลิกเพื่อดู % และผลประกอบการเชิงลึกได้) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div onclick="openReportModal('daily')" class="soft-card clickable-card p-4 rounded-2xl flex items-center justify-between bg-gradient-to-r from-amber-50 to-white border-l-4 border-amber-600">
+        <div>
+          <p class="text-xs text-gray-500 font-medium">📅 สรุปยอด "ประจำวัน" (คลิกดู %)</p>
+          <h3 id="summary-daily" class="text-xl font-bold text-[#8B4513] mt-0.5">0 รายการ</h3>
+        </div>
+        <span class="text-2xl">☀️</span>
+      </div>
+      <div onclick="openReportModal('weekly')" class="soft-card clickable-card p-4 rounded-2xl flex items-center justify-between bg-gradient-to-r from-amber-50 to-white border-l-4 border-orange-500">
+        <div>
+          <p class="text-xs text-gray-500 font-medium">📅 สรุปยอด "ประจำสัปดาห์" (คลิกดู %)</p>
+          <h3 id="summary-weekly" class="text-xl font-bold text-[#8B4513] mt-0.5">0 รายการ</h3>
+        </div>
+        <span class="text-2xl">🗓️</span>
+      </div>
+      <div onclick="openReportModal('monthly')" class="soft-card clickable-card p-4 rounded-2xl flex items-center justify-between bg-gradient-to-r from-amber-50 to-white border-l-4 border-emerald-600">
+        <div>
+          <p class="text-xs text-gray-500 font-medium">📅 สรุปยอด "ประจำเดือน" (คลิกดู %)</p>
+          <h3 id="summary-monthly" class="text-xl font-bold text-[#8B4513] mt-0.5">0 รายการ</h3>
+        </div>
+        <span class="text-2xl">📈</span>
+      </div>
+    </div>
+
+    <!-- สรุปตัวเลขภาพรวม (Cards กดคลิกเพื่อกรองได้) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div onclick="setPointFilter('all')" class="soft-card clickable-card p-4 rounded-2xl border-l-4 border-amber-600">
+        <p class="text-xs text-gray-500 font-medium">🔍 ทั้งหมด (คลิกดูทั้งหมด)</p>
+        <h3 id="stat-total" class="text-2xl font-bold text-[#8B4513] mt-1">0</h3>
+      </div>
+      <div onclick="setPointFilter('1')" class="soft-card clickable-card p-4 rounded-2xl border-l-4 border-orange-500">
+        <p class="text-xs text-gray-500 font-medium">🌡️ 1. อุณหภูมิ & ความหวาน</p>
+        <h3 id="stat-p1" class="text-2xl font-bold text-orange-600 mt-1">0</h3>
+      </div>
+      <div onclick="setPointFilter('2')" class="soft-card clickable-card p-4 rounded-2xl border-l-4 border-yellow-500">
+        <p class="text-xs text-gray-500 font-medium">🍯 2. เคี่ยวน้ำตาล (GHP)</p>
+        <h3 id="stat-p2" class="text-2xl font-bold text-yellow-600 mt-1">0</h3>
+      </div>
+      <div onclick="setPointFilter('3')" class="soft-card clickable-card p-4 rounded-2xl border-l-4 border-emerald-500">
+        <p class="text-xs text-gray-500 font-medium">📦 3. ขั้นสุดท้าย (AQL)</p>
+        <h3 id="stat-p3" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+      </div>
+    </div>
+
+    <!-- ส่วนค้นหา, กรองข้อมูล และเลือกดูย้อนหลังตามวันที่ -->
+    <div class="soft-card p-4 rounded-2xl flex flex-col md:flex-row gap-3 justify-between items-center">
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-bold whitespace-nowrap">📌 แผนก:</span>
+          <select id="filter-point" onchange="filterData()" class="p-2 rounded-xl border border-amber-200 text-xs font-semibold bg-white">
+            <option value="all">ทุกแผนกการตรวจสอบ</option>
+            <option value="1">1. อุณหภูมิ & ความหวาน</option>
+            <option value="2">2. เคี่ยวน้ำตาล (GHP-2002)</option>
+            <option value="3">3. ขั้นสุดท้าย (Final Inspection)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-bold whitespace-nowrap">📅 เลือกวันที่:</span>
+          <input type="date" id="filter-date" onchange="filterData()" class="p-2 rounded-xl border border-amber-200 text-xs bg-white font-semibold" />
+          <button onclick="clearDateFilter()" class="text-[11px] bg-gray-200 hover:bg-gray-300 px-2 py-1.5 rounded-lg text-gray-700">ดูทั้งหมด</button>
+        </div>
+      </div>
+
+      <div class="w-full md:w-64">
+        <input type="text" id="search-box" onkeyup="filterData()" placeholder="🔍 ค้นหารายละเอียด, ผู้ตรวจ..." class="w-full p-2 rounded-xl border border-amber-200 text-xs" />
+      </div>
+    </div>
+
+    <!-- ตารางแสดงรายการข้อมูลทั้งหมดจาก Google Sheet -->
+    <div class="soft-card rounded-2xl overflow-hidden shadow-sm">
+      <div class="p-4 bg-amber-50/50 border-b border-amber-100 flex justify-between items-center">
+        <h3 class="text-sm font-bold text-[#8B4513]">📋 รายการบันทึกคุณภาพทั้งหมดในระบบ</h3>
+        <button onclick="loadSheetData()" class="text-xs bg-amber-600 text-white px-3 py-1.5 rounded-xl hover:bg-amber-700 transition">
+          🔄 รีเฟรชข้อมูล
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-amber-100/60 text-[#8B4513] border-b border-amber-200">
+              <th class="p-3">วันที่ / เวลา</th>
+              <th class="p-3">ประเภทการตรวจ</th>
+              <th class="p-3">รายละเอียดการตรวจสอบ</th>
+              <th class="p-3">สถานะ</th>
+              <th class="p-3">หมายเหตุ / ผู้ตรวจ</th>
+            </tr>
+          </thead>
+          <tbody id="sheet-data-body">
+            <tr>
+              <td colspan="5" class="text-center py-8 text-gray-400">⏳ กำลังดึงข้อมูลจาก Google Sheet...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal ป๊อปอัปแสดง % และผลประกอบการเชิงวิเคราะห์ -->
+  <div id="report-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 soft-card relative animate-scale">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 id="modal-title" class="text-base font-bold text-[#8B4513]">📊 รายงานสรุปผลประกอบการและคุณภาพ</h3>
+        <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold px-2">✕</button>
+      </div>
+
+      <!-- สัดส่วน % ความสำเร็จ -->
+      <div class="flex items-center justify-around bg-amber-50/60 p-4 rounded-2xl border border-amber-100">
+        <div class="text-center">
+          <div id="modal-pass-percent" class="text-3xl font-extrabold text-emerald-600">0%</div>
+          <div class="text-xs text-gray-500 mt-1">อัตราผ่านเกณฑ์ QC</div>
+        </div>
+        <div class="h-10 w-[1px] bg-amber-200"></div>
+        <div class="text-center">
+          <div id="modal-total-count" class="text-2xl font-bold text-[#8B4513]">0</div>
+          <div class="text-xs text-gray-500 mt-1">รายการตรวจทั้งหมด</div>
+        </div>
+      </div>
+
+      <!-- รายละเอียดแยกย่อย -->
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+          <span class="text-gray-500">ผ่านเกณฑ์มาตรฐาน:</span>
+          <div id="modal-pass-count" class="text-lg font-bold text-emerald-700 mt-0.5">0 รายการ</div>
+        </div>
+        <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+          <span class="text-gray-500">พบปัญหา / ไม่ผ่าน:</span>
+          <div id="modal-fail-count" class="text-lg font-bold text-red-700 mt-0.5">0 รายการ</div>
+        </div>
+      </div>
+
+      <!-- ข้อความวิเคราะห์ผลประกอบการเชิงคุณภาพ -->
+      <div class="bg-amber-50/80 p-4 rounded-2xl border border-amber-200 space-y-1.5">
+        <p class="text-xs font-bold text-[#8B4513]">💡 บทวิเคราะห์ผลประกอบการและคุณภาพ (Insights):</p>
+        <p id="modal-insight-text" class="text-xs text-gray-700 leading-relaxed">กำลังประมวลผลข้อมูล...</p>
+      </div>
+
+      <button onclick="closeReportModal()" class="w-full py-3 rounded-xl bg-[#8B4513] text-white font-bold hover:bg-amber-900 transition">
+        รับทราบและปิดรายงาน
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdC91dNUEyQho8TQP7wxJxrwW5CTLBvpAhFZZzd_aTtZwV4NMLDUM1yG-wAss8Q_nYMQ/exec';
+
+    let allRecords = [];
+
+    async function loadSheetData() {
+      const tbody = document.getElementById('sheet-data-body');
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">⏳ กำลังดึงข้อมูลจาก Google Sheet...</td></tr>`;
+
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          allRecords = result.data;
+          filterData();
+          updateStats(allRecords);
+          document.getElementById('update-time').innerText = 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
+        }
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500">ไม่สามารถเชื่อมต่อ Google Sheet ได้</td></tr>`;
+      }
+    }
+
+    let dailyList = [];
+    let weeklyList = [];
+    let monthlyList = [];
+
+    function updateStats(data) {
+      document.getElementById('stat-total').innerText = data.length;
+      document.getElementById('stat-p1').innerText = data.filter(i => Number(i.point) === 1).length;
+      document.getElementById('stat-p2').innerText = data.filter(i => Number(i.point) === 2).length;
+      document.getElementById('stat-p3').innerText = data.filter(i => Number(i.point) === 3).length;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      dailyList = data.filter(i => i.date === todayStr);
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      monthlyList = data.filter(i => {
+        if (!i.date) return false;
+        const d = new Date(i.date);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      weeklyList = data.filter(i => {
+        if (!i.date) return false;
+        const d = new Date(i.date);
+        return d >= sevenDaysAgo && d <= now;
+      });
+
+      document.getElementById('summary-daily').innerText = `${dailyList.length} รายการ`;
+      document.getElementById('summary-weekly').innerText = `${weeklyList.length} รายการ`;
+      document.getElementById('summary-monthly').innerText = `${monthlyList.length} รายการ`;
+    }
+
+    function openReportModal(type) {
+      let targetData = [];
+      let titleName = '';
+
+      if (type === 'daily') {
+        targetData = dailyList;
+        titleName = '📅 รายงานสรุปผลประกอบการและคุณภาพ "ประจำวัน"';
+      } else if (type === 'weekly') {
+        targetData = weeklyList;
+        titleName = '🗓️ รายงานสรุปผลประกอบการและคุณภาพ "ประจำสัปดาห์"';
+      } else if (type === 'monthly') {
+        targetData = monthlyList;
+        titleName = '📈 รายงานสรุปผลประกอบการและคุณภาพ "ประจำเดือนนี้"';
+      }
+
+      document.getElementById('modal-title').innerText = titleName;
+      const total = targetData.length;
+
+      if (total === 0) {
+        document.getElementById('modal-pass-percent').innerText = '0%';
+        document.getElementById('modal-total-count').innerText = '0';
+        document.getElementById('modal-pass-count').innerText = '0 รายการ';
+        document.getElementById('modal-fail-count').innerText = '0 รายการ';
+        document.getElementById('modal-insight-text').innerText = 'ยังไม่มีข้อมูลการบันทึกในรอบเวลาดังกล่าวสำหรับประเมินผลประกอบการ';
+        document.getElementById('report-modal').classList.remove('hidden');
+        return;
+      }
+
+      const passCount = targetData.filter(i => i.status !== 'ไม่ผ่าน').length;
+      const failCount = total - passCount;
+      const passPercent = Math.round((passCount / total) * 100);
+
+      document.getElementById('modal-pass-percent').innerText = passPercent + '%';
+      document.getElementById('modal-total-count').innerText = total;
+      document.getElementById('modal-pass-count').innerText = passCount + ' รายการ';
+      document.getElementById('modal-fail-count').innerText = failCount + ' รายการ';
+
+      let insight = '';
+      if (passPercent >= 90) {
+        insight = `ยอดเยี่ยมมาก! อัตราผ่านเกณฑ์มาตรฐานสูงถึง ${passPercent}% การควบคุมคุณภาพการผลิตน้ำตาลของโรงงาน "โอ้วเจริญพร" ดำเนินไปอย่างราบรื่น ผลผลิตได้มาตรฐานตามข้อกำหนดของลูกค้า (เช่น แมคโคร) ควรกำชับทีมงานให้รักษามาตรฐานนี้ไว้ต่อเนื่อง`;
+      } else if (passPercent >= 70) {
+        insight = `ผลประกอบการอยู่ในเกณฑ์ปานกลาง (ผ่าน ${passPercent}%) พบข้อสังเกตหรือรายการที่ไม่ผ่านบางจุด หัวหน้างานควรตรวจสอบบันทึกหมายเหตุหน้างานเพื่อแก้ไขปรับปรุงกระบวนการเคี่ยวหรือการบรรจุให้รัดกุมยิ่งขึ้น`;
+      } else {
+        insight = `⚠️ แจ้งเตือนด่วน: อัตราผ่านเกณฑ์ลดลงเหลือ ${passPercent}% พบสินค้าไม่ผ่านเกณฑ์หรือปัญหาการปนเปื้อนค่อนข้างสูง หัวหน้างานจำเป็นต้องเข้าตรวจสอบกระบวนการผลิตและสั่งการแก้ไขหน้างานทันทีเพื่อป้องกันความเสียหายต่อภาพลักษณ์ของบริษัท`;
+      }
+
+      document.getElementById('modal-insight-text').innerText = insight;
+      document.getElementById('report-modal').classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+      document.getElementById('report-modal').classList.add('hidden');
+    }
+
+    function setPointFilter(val) {
+      document.getElementById('filter-point').value = val;
+      filterData();
+    }
+
+    function clearDateFilter() {
+      document.getElementById('filter-date').value = '';
+      filterData();
+    }
+
+    function filterData() {
+      const pointFilter = document.getElementById('filter-point').value;
+      const dateFilter = document.getElementById('filter-date').value;
+      const searchText = document.getElementById('search-box').value.toLowerCase();
+
+      let filtered = allRecords.filter(item => {
+        const matchPoint = (pointFilter === 'all' || String(item.point) === pointFilter);
+        const matchDate = (!dateFilter || item.date === dateFilter);
+        const matchSearch = (
+          (item.detail && item.detail.toLowerCase().includes(searchText)) || 
+          (item.note && item.note.toLowerCase().includes(searchText)) ||
+          (item.date && item.date.includes(searchText))
+        );
+        return matchPoint && matchDate && matchSearch;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('sheet-data-body');
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">ไม่พบข้อมูลการตรวจสอบตามเงื่อนไขที่เลือก</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        let badgeColor = 'bg-amber-100 text-amber-800';
+        const p = Number(item.point);
+        if (p === 1) badgeColor = 'bg-orange-100 text-orange-800';
+        if (p === 2) badgeColor = 'bg-yellow-100 text-yellow-800';
+        if (p === 3) badgeColor = 'bg-emerald-100 text-emerald-800';
+
+        let statusBadge = item.status === 'ไม่ผ่าน' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700';
+
+        return `
+          <tr class="border-b border-amber-50 hover:bg-amber-50/30 transition">
+            <td class="p-3 whitespace-nowrap text-gray-600">${item.date} <br><span class="text-[10px] text-gray-400">${item.time} น.</span></td>
+            <td class="p-3"><span class="px-2.5 py-1 rounded-full font-bold text-[11px] ${badgeColor}">${item.pointName}</span></td>
+            <td class="p-3 text-gray-800 font-medium max-w-xs break-words">${item.detail}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full font-bold ${statusBadge}">${item.status}</span></td>
+            <td class="p-3 text-gray-600">${item.note || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.onload = loadSheetData;
+  </script>
+</body>
+</html>
